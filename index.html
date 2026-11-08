@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LC傾斜計">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2.5">
+<link rel="apple-touch-icon" id="touchIcon" href="apple-touch-icon.png?v=2.5">
 <link rel="icon" href="icon-192.png">
 <title>LAND CRUISER | CLINOMETER PRO</title>
 <style>
@@ -106,6 +106,10 @@ input[type=range]{width:100%;accent-color:var(--orange)}
 .actions2 button{flex:1;padding:13px;border:1px solid #3a4552;border-radius:12px;background:#222c38;font-weight:700}
 .actions2 .primary{background:#9c5717;border-color:#c87926}
 .ghost{width:100%;padding:12px;border:1px solid #3a4552;border-radius:12px;background:#1a222c;font-weight:700;margin-top:8px}
+.two{display:flex;gap:8px}.two .ghost{flex:1;font-size:13px}
+.ghost.sm{flex:0 0 auto;padding:12px 14px}
+.adj svg{display:block;width:min(70vw,260px);margin:4px auto}
+.adj .field{margin:8px 0}.adj input[type=range]{width:100%}
 .ver{text-align:center;font-size:10px;color:#5d6a77;margin-top:14px}
 .flash{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 #e5483c;z-index:5;transition:box-shadow .15s}
 .flash.on{box-shadow:inset 0 0 40px 10px #e5483ccc}
@@ -201,9 +205,16 @@ input[type=range]{width:100%;accent-color:var(--orange)}
   <h3>車両</h3>
   <div class="field"><label for="carModel">ランドクルーザーシリーズ</label><select id="carModel">
     <option value="40">40系(FJ40V)</option><option value="60">60系(FJ60V)</option><option value="70">70系(GDJ76W)</option><option value="80">80系(FZJ80G)</option><option value="100">100系(UZJ100W)</option><option value="200">200系(URJ202W)</option><option value="300">300系(FJA300W)</option></select></div>
-  <div class="row"><div>実写の写真で表示<small>自分の車(70系)の写真。オフでイラスト表示</small></div><input type="checkbox" class="switch" id="photo"></div>
+  <div class="row"><div>写真で表示<small>オフでイラスト表示</small></div><input type="checkbox" class="switch" id="photo"></div>
   <div class="field"><label for="carColor">車体カラー</label><select id="carColor">
     <option value="#d7d1b8">サンドベージュ</option><option value="#f2f2ed">ホワイト</option><option value="#b9bec2">シルバー</option><option value="#202a2b">ダークグレー</option><option value="#243c2c">ダークグリーン</option><option value="#1f3b5c">ネイビー</option><option value="#151719">ブラック</option><option value="#8d3027">レッド</option></select></div>
+  <h3>自分の車の写真</h3>
+  <p class="note">きれいに出すコツ:「写真」アプリで車を長押し →「共有」→「画像を保存」で、背景を消した画像を作ってから選んでください。背景つきの写真もそのまま使えます。写真はこの端末の中だけに保存されます。</p>
+  <div class="two"><button class="ghost" id="pickpitch">真横の写真を選ぶ</button><button class="ghost sm" id="adjpitch">調整</button></div>
+  <div class="two"><button class="ghost" id="pickroll">真正面の写真を選ぶ</button><button class="ghost sm" id="adjroll">調整</button></div>
+  <button class="ghost" id="resetPhoto">元の写真に戻す</button>
+  <p class="note">真正面の写真は、ホーム画面のアイコンにもなります。アイコンを変えるには、今のアイコンを削除して、Safariからもう一度「ホーム画面に追加」してください。</p>
+  <input type="file" accept="image/*" id="fileIn" hidden>
   <h3>計測</h3>
   <div class="field"><label for="mount">スマホの設置方向</label><select id="mount">
     <option value="auto">自動判定(推奨)</option><option value="upright">立てて設置(画面が運転者側)</option><option value="flatF">平置き(画面上・上端が前)</option><option value="flatB">平置き(画面上・上端が後ろ)</option></select></div>
@@ -219,7 +230,17 @@ input[type=range]{width:100%;accent-color:var(--orange)}
   <button class="ghost" id="clearCal">校正データを消去</button>
   <div class="actions2"><button id="close">閉じる</button><button class="primary" id="calibrate">いまの姿勢をゼロに設定</button></div>
   <p class="note">停車中に設置し、水平な場所で「ゼロ設定」を押してください。走行中は画面を操作しないでください。</p>
-  <div class="ver">CLINOMETER PRO v2.5</div>
+  <div class="ver">CLINOMETER PRO v2.6</div>
+</div></div>
+<div class="modal" id="adjModal"><div class="sheet adj">
+  <h2 id="adjTitle">写真の位置合わせ</h2>
+  <p class="note">オレンジの線にタイヤの下が乗るように合わせてください。</p>
+  <svg id="pvSvg" viewBox="12 1 216 219"></svg>
+  <div class="field"><label>大きさ</label><input type="range" id="aK" min="0.5" max="1.6" step="0.01"></div>
+  <div class="field"><label>左右</label><input type="range" id="aX" min="-40" max="40" step="0.5"></div>
+  <div class="field"><label>上下</label><input type="range" id="aY" min="-30" max="30" step="0.5"></div>
+  <div class="field"><label>傾き</label><input type="range" id="aR" min="-10" max="10" step="0.1"></div>
+  <div class="actions2"><button id="adjReset">初期値</button><button class="primary" id="adjOk">決定</button></div>
 </div></div>
 <script>
 /* ===== Land Cruiser シリーズ車体データ(実寸 mm)と SVG ジェネレータ =====
@@ -585,8 +606,8 @@ function rebuildFrame() {
 }
 
 /* ---------- メーター描画 ---------- */
-function makeGauge(type) {
-  const svg = $(type + 'Svg'), car = S.photo ? carPhotoSVG(type) : type === 'pitch' ? carSideSVG(S.model, S.color, SIDE_S) : carFrontSVG(S.model, S.color, FRONT_S);
+function makeGauge(type, svg = $(type + 'Svg'), id = type) {
+  const car = S.photo ? carPhotoSVG(type) : type === 'pitch' ? carSideSVG(S.model, S.color, SIDE_S) : carFrontSVG(S.model, S.color, FRONT_S);
   let ticks = '';
   for (let a = -45; a <= 45; a += 5) {
     const major = a % 15 === 0, r = (a - 90) * D2R, ri = 84, ro = major ? 98 : 91;
@@ -600,13 +621,13 @@ function makeGauge(type) {
   for (let x = 30; x <= 210; x += 30) grid += `<line x1="${x}" y1="25" x2="${x}" y2="200" stroke="#212b35" stroke-width=".7"/>`;
   for (let y = 40; y <= 190; y += 30) grid += `<line x1="18" y1="${y}" x2="222" y2="${y}" stroke="#212b35" stroke-width=".7"/>`;
   const groundY = CY + 900 * (type === 'pitch' ? SIDE_S : FRONT_S);
-  svg.innerHTML = `<defs><radialGradient id="${type}bg"><stop stop-color="#1c2631"/><stop offset="1" stop-color="#0b0f14"/></radialGradient><clipPath id="${type}clip"><circle cx="${CX}" cy="${CY}" r="104"/></clipPath></defs>
-  <circle cx="${CX}" cy="${CY}" r="105" fill="url(#${type}bg)" stroke="#35414d" stroke-width="1.5"/>
-  <g clip-path="url(#${type}clip)">${grid}
-   <g id="${type}Rot"><line x1="-110" y1="${groundY - CY}" x2="110" y2="${groundY - CY}" transform="translate(${CX},${CY})" stroke="#e88925" stroke-width="1.2" opacity=".6"/><g transform="translate(${CX},${CY})">${car}</g></g>
+  svg.innerHTML = `<defs><radialGradient id="${id}bg"><stop stop-color="#1c2631"/><stop offset="1" stop-color="#0b0f14"/></radialGradient><clipPath id="${id}clip"><circle cx="${CX}" cy="${CY}" r="104"/></clipPath></defs>
+  <circle cx="${CX}" cy="${CY}" r="105" fill="url(#${id}bg)" stroke="#35414d" stroke-width="1.5"/>
+  <g clip-path="url(#${id}clip)">${grid}
+   <g id="${id}Rot"><line x1="-110" y1="${groundY - CY}" x2="110" y2="${groundY - CY}" transform="translate(${CX},${CY})" stroke="#e88925" stroke-width="1.2" opacity=".6"/><g transform="translate(${CX},${CY})">${car}</g></g>
   </g>
   <path d="M${CX - 92} ${CY} A92 92 0 0 1 ${CX + 92} ${CY}" fill="none" stroke="#e88925" stroke-width="1.2" opacity=".5"/>${ticks}
-  <g id="${type}Needle"><path d="M${CX} 12 L${CX - 5.5} 2 H${CX + 5.5}Z" fill="#e88925" stroke="#fff" stroke-width=".8"/></g>
+  <g id="${id}Needle"><path d="M${CX} 12 L${CX - 5.5} 2 H${CX + 5.5}Z" fill="#e88925" stroke="#fff" stroke-width=".8"/></g>
   <circle cx="${CX}" cy="${CY}" r="3.5" fill="#e88925" stroke="#fff" stroke-width="1"/>`;
 }
 function remake() { makeGauge('pitch'); makeGauge('roll'); lastKey = ''; }
@@ -616,8 +637,18 @@ const PHOTO = {
   pitch: { src: 'car-side.webp', wmm: 4771, hmm: 1956, cx: 435 / 900, s: SIDE_S },
   roll: { src: 'car-front.webp', wmm: 2070, hmm: 1960, cx: 0.5, s: FRONT_S }
 };
+/* 自分で選んだ写真(端末の中に保存)。{src,w,h} = 画像と画素数 */
+const UP = { pitch: store.get('lc.photo.pitch', null), roll: store.get('lc.photo.roll', null) };
+const ADJ0 = { k: 1, x: 0, y: 0, r: 0 };
 function carPhotoSVG(type) {
-  const p = PHOTO[type], w = p.wmm * p.s, h = p.hmm * p.s, gy = 900 * p.s;
+  const u = UP[type], a = Object.assign({}, ADJ0, (S.adj || {})[type]);
+  let p = PHOTO[type];
+  if (u) p = { src: u.src, wmm: p.wmm, hmm: p.wmm * u.h / u.w, cx: 0.5, s: p.s };
+  const w = p.wmm * p.s, h = p.hmm * p.s, gy = 900 * p.s;
+  if (!u) return photoBody(p, w, h, gy);
+  return `<g transform="translate(${a.x},${(gy + a.y).toFixed(1)}) rotate(${a.r}) scale(${a.k}) translate(0,${(-gy).toFixed(1)})">${photoBody(p, w, h, gy)}</g>`;
+}
+function photoBody(p, w, h, gy) {
   return `<ellipse cx="0" cy="${(gy + 1).toFixed(1)}" rx="${(w * 0.48).toFixed(1)}" ry="3.2" fill="#000" opacity=".45"/>` +
     `<image href="${p.src}" x="${(-p.cx * w).toFixed(1)}" y="${(gy - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="none"/>`;
 }
@@ -903,7 +934,82 @@ const isStandalone = navigator.standalone === true || matchMedia('(display-mode:
 if (IS_IOS && !isStandalone && !store.get('lc.a2hsHidden', false)) $('a2hs').classList.add('show');
 $('a2hsClose').onclick = () => { $('a2hs').classList.remove('show'); store.set('lc.a2hsHidden', true); };
 
+/* ---------- 自分の車の写真 ---------- */
+let pickType = 'pitch', adjType = 'pitch';
+function loadImg(file) {
+  return new Promise((ok, ng) => { const url = URL.createObjectURL(file), im = new Image(); im.onload = () => ok(im); im.onerror = ng; im.src = url; });
+}
+/* 読み込んだ画像を縮め、背景なし画像なら透明な余白を切り落とす */
+function processImg(im, maxW) {
+  let W = im.naturalWidth, H = im.naturalHeight, f = Math.min(1, 1400 / Math.max(W, H));
+  const c = document.createElement('canvas'); c.width = Math.round(W * f); c.height = Math.round(H * f);
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0, c.width, c.height);
+  const d = g.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1, clear = 0;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+    if (d[(y * c.width + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } else clear++;
+  }
+  const alpha = clear > c.width * c.height * 0.02 && x1 > x0;
+  if (!alpha) { x0 = 0; y0 = 0; x1 = c.width - 1; y1 = c.height - 1; }
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1, k = Math.min(1, maxW / cw);
+  const o = document.createElement('canvas'); o.width = Math.round(cw * k); o.height = Math.round(ch * k);
+  o.getContext('2d').drawImage(c, x0, y0, cw, ch, 0, 0, o.width, o.height);
+  let src = o.toDataURL('image/webp', 0.85);
+  if (!src.startsWith('data:image/webp')) src = alpha ? o.toDataURL('image/png') : o.toDataURL('image/jpeg', 0.85);
+  return { src, w: o.width, h: o.height };
+}
+/* 真正面の写真からホーム画面のアイコンを作る */
+function makeIcon(u) {
+  return new Promise(ok => {
+    const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 180; const g = c.getContext('2d');
+      const bg = g.createRadialGradient(90, 70, 10, 90, 90, 130); bg.addColorStop(0, '#1f2a36'); bg.addColorStop(1, '#07090c');
+      g.fillStyle = bg; g.fillRect(0, 0, 180, 180);
+      const k = Math.min(150 / u.w, 140 / u.h), w = u.w * k, h = u.h * k;
+      g.drawImage(im, (180 - w) / 2, 160 - h, w, h);
+      ok(c.toDataURL('image/png'));
+    };
+    im.src = u.src;
+  });
+}
+function applyIcon() { const i = store.get('lc.icon', null); $('touchIcon').href = i || 'apple-touch-icon.png?v=2.6'; }
+function saveBig(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } }
+function updatePhotoBtns() { ['pitch', 'roll'].forEach(t => $('adj' + t).style.display = UP[t] ? '' : 'none'); }
+['pitch', 'roll'].forEach(t => {
+  $('pick' + t).onclick = () => { pickType = t; $('fileIn').value = ''; $('fileIn').click(); };
+  $('adj' + t).onclick = () => openAdj(t);
+});
+$('fileIn').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const u = processImg(await loadImg(f), pickType === 'pitch' ? 900 : 600);
+    if (!saveBig('lc.photo.' + pickType, u)) { toast('保存できませんでした(空き容量不足)'); return; }
+    UP[pickType] = u; S.adj = Object.assign({}, S.adj, { [pickType]: { ...ADJ0 } }); S.photo = true; $('photo').checked = true; saveS();
+    if (pickType === 'roll') { const ic = await makeIcon(u); saveBig('lc.icon', ic); applyIcon(); }
+    remake(); updatePhotoBtns(); openAdj(pickType);
+  } catch (_) { toast('写真を読み込めませんでした'); }
+};
+function openAdj(t) {
+  adjType = t; const a = Object.assign({}, ADJ0, (S.adj || {})[t]);
+  $('adjTitle').textContent = (t === 'pitch' ? '真横' : '真正面') + 'の写真の位置合わせ';
+  $('aK').value = a.k; $('aX').value = a.x; $('aY').value = a.y; $('aR').value = a.r;
+  closeM(); $('adjModal').classList.add('open'); drawPv();
+}
+function drawPv() { makeGauge(adjType, $('pvSvg'), 'pv'); }
+['aK', 'aX', 'aY', 'aR'].forEach(id => $(id).oninput = () => {
+  S.adj = Object.assign({}, S.adj, { [adjType]: { k: +$('aK').value, x: +$('aX').value, y: +$('aY').value, r: +$('aR').value } }); drawPv();
+});
+$('adjReset').onclick = () => { S.adj = Object.assign({}, S.adj, { [adjType]: { ...ADJ0 } }); openAdj(adjType); };
+$('adjOk').onclick = () => { saveS(); remake(); $('adjModal').classList.remove('open'); toast('写真を設定しました'); };
+$('resetPhoto').onclick = () => {
+  if (!UP.pitch && !UP.roll) { toast('元の写真のままです'); return; }
+  if (!confirm('自分で選んだ写真を消して、元の写真に戻しますか?')) return;
+  ['lc.photo.pitch', 'lc.photo.roll', 'lc.icon'].forEach(k => store.del(k)); UP.pitch = UP.roll = null; S.adj = {}; saveS();
+  applyIcon(); remake(); updatePhotoBtns(); toast('元の写真に戻しました');
+};
+
 /* ---------- 起動 ---------- */
+applyIcon(); updatePhotoBtns();
 applySettingsToUI(); applyModel(); makeGMeter(); updateButtons();
 requestAnimationFrame(render);
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
