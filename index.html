@@ -20,14 +20,14 @@ body{background:var(--bg);color:var(--white);font-family:-apple-system,BlinkMacS
 /* 縦画面: 画面1枚に収まるよう、メーター部分が残りの高さに合わせて伸び縮みする */
 .app{width:min(100%,520px);height:100svh;margin:auto;padding:calc(4px + env(safe-area-inset-top)) 10px calc(6px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 18%,#1a222b 0,#0b0f14 58%,#080a0d 100%);position:relative;display:grid;gap:6px;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,2.5fr) auto minmax(0,1fr) auto;grid-template-areas:"top" "status" "gauges" "side" "gmeter" "demo"}
 .top{grid-area:top;display:flex;align-items:center;gap:6px;min-width:0}
-.brand{font-size:0;line-height:1;white-space:nowrap;margin-right:auto}
+.brand{font-size:0;line-height:1;white-space:nowrap;margin-right:auto;min-width:0;overflow:hidden}.brand b{overflow:hidden;text-overflow:ellipsis}
 .brand b{display:block;font-size:13px;color:#fff;letter-spacing:.06em}
 .brand b span{color:var(--orange)}
 button{font:inherit;color:inherit;cursor:pointer}
 .iconbtn{width:26px;height:26px;border:1px solid #39424e;background:#151b23;border-radius:50%;font-size:14px;display:grid;place-items:center;flex:none}
 .actions{display:flex;gap:6px;flex:none}
 .btn{height:26px;padding:0 10px;border-radius:8px;border:1px solid #39424e;background:#151b23;font-weight:800;font-size:11.5px;letter-spacing:.04em;white-space:nowrap}
-.btn.zero{border-color:#c87926;background:linear-gradient(180deg,#b86a1d,#7c3f0b);color:#fff;box-shadow:0 0 14px #e8892522}
+.btn.zero{border-color:var(--orange);background:linear-gradient(180deg,color-mix(in srgb,var(--orange) 78%,#000),color-mix(in srgb,var(--orange) 42%,#000));color:#fff;box-shadow:0 0 14px color-mix(in srgb,var(--orange) 15%,transparent)}
 .btn.start{border-color:#28734d;background:#123b2a}
 .btn.start.on{background:#12643b;border-color:#2fbf78;box-shadow:0 0 14px #27b36a33}
 .btn:active,.iconbtn:active{transform:scale(.97)}
@@ -95,6 +95,8 @@ input[type=range]{width:100%;accent-color:var(--orange)}
 .sheet h3{font-size:12px;letter-spacing:.14em;color:var(--orange);margin:18px 0 4px}
 .field{margin:12px 0}
 .field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.field input:not([type]){width:100%;background:#0c1117;color:#fff;border:1px solid #3a4552;border-radius:10px;padding:12px;font-size:16px}
+input[type=color]{width:50px;height:34px;border:1px solid #3a4552;border-radius:8px;background:#0c1117;padding:2px}
 .field select{width:100%;background:#0c1117;color:#fff;border:1px solid #3a4552;border-radius:10px;padding:12px;font-size:16px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;font-size:14px}
 .row small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
@@ -104,13 +106,14 @@ input[type=range]{width:100%;accent-color:var(--orange)}
 .switch:checked::after{left:23px}
 .actions2{display:flex;gap:8px;margin-top:20px}
 .actions2 button{flex:1;padding:13px;border:1px solid #3a4552;border-radius:12px;background:#222c38;font-weight:700}
-.actions2 .primary{background:#9c5717;border-color:#c87926}
+.actions2 .primary{background:color-mix(in srgb,var(--orange) 62%,#000);border-color:var(--orange)}
 .ghost{width:100%;padding:12px;border:1px solid #3a4552;border-radius:12px;background:#1a222c;font-weight:700;margin-top:8px}
 .two{display:flex;gap:8px}.two .ghost{flex:1;font-size:13px}
 .ghost.sm{flex:0 0 auto;padding:12px 14px}
 .adj svg{display:block;width:min(70vw,260px);margin:4px auto}
 .adj .field{margin:8px 0}.adj input[type=range]{width:100%}
 .sil *{fill:none!important;stroke:#c9d3dc!important;stroke-width:1.1px!important}.sil ellipse:first-of-type{display:none}
+.brand b,.angle,.stat .v,.speed .v,.gread .gv,.label,svg text{font-family:var(--numfont,inherit);font-style:var(--numstyle,normal)}
 .ver{text-align:center;font-size:10px;color:#5d6a77;margin-top:14px}
 .flash{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 #e5483c;z-index:5;transition:box-shadow .15s}
 .flash.on{box-shadow:inset 0 0 40px 10px #e5483ccc}
@@ -161,7 +164,7 @@ input[type=range]{width:100%;accent-color:var(--orange)}
 <div class="flash" id="flash"></div>
 <main class="app">
   <header class="top">
-    <div class="brand">OFF-ROAD INSTRUMENT<b>LAND CRUISER <span id="seriesLabel">70</span></b></div>
+    <div class="brand">OFF-ROAD INSTRUMENT<b id="brandName"></b></div>
     <div class="actions">
       <button class="btn zero" id="zeroBtn">⟲ ゼロ設定</button>
       <button class="btn start" id="sensorBtn">▶ 計測開始</button>
@@ -204,6 +207,11 @@ input[type=range]{width:100%;accent-color:var(--orange)}
 <div class="modal" id="modal"><div class="sheet">
   <h2>設定</h2>
   <h3>表示</h3>
+  <div class="field"><label for="carName">左上に出す名前(最後の言葉がオレンジ色)</label><input id="carName" maxlength="24" placeholder="LAND CRUISER"></div>
+  <div class="field"><label for="theme">計器のデザイン(色と数字の書体)</label><select id="theme">
+    <option value="std">スタンダード(オレンジ)</option><option value="race">レーシング(赤・斜体)</option><option value="night">ナイトブルー(青・丸み)</option><option value="mil">ミリタリー(緑・計器文字)</option><option value="classic">クラシック(金・セリフ)</option><option value="mono">モノクロ(白・細身)</option></select></div>
+  <div class="row"><div>名前の文字の色<small>デザインを変えると初期値に戻ります</small></div><input type="color" id="nameColor" value="#ffffff"></div>
+  <div class="row"><div>最後の言葉の色</div><input type="color" id="nameAccent" value="#e88925"></div>
   <div class="row"><div>自分の車の写真で表示<small>オフ、または写真がないときは線の絵で表示</small></div><input type="checkbox" class="switch" id="photo"></div>
   <h3>自分の車の写真</h3>
   <p class="note">きれいに出すコツ:「写真」アプリで車を長押し →「共有」→「画像を保存」で、背景を消した画像を作ってから選んでください。背景つきの写真もそのまま使えます。写真はこの端末の中だけに保存されます。</p>
@@ -227,7 +235,7 @@ input[type=range]{width:100%;accent-color:var(--orange)}
   <button class="ghost" id="clearCal">校正データを消去</button>
   <div class="actions2"><button id="close">閉じる</button><button class="primary" id="calibrate">いまの姿勢をゼロに設定</button></div>
   <p class="note">停車中に設置し、水平な場所で「ゼロ設定」を押してください。走行中は画面を操作しないでください。</p>
-  <div class="ver">CLINOMETER PRO v2.7</div>
+  <div class="ver">CLINOMETER PRO v3.0</div>
 </div></div>
 <div class="modal" id="adjModal"><div class="sheet adj">
   <h2 id="adjTitle">写真の位置合わせ</h2>
@@ -548,6 +556,23 @@ function primFront(p, X, Y, s, color, id) {
 'use strict';
 const $ = id => document.getElementById(id);
 const D2R = Math.PI / 180, R2D = 180 / Math.PI, G0 = 9.80665;
+/* 計器のデザイン: a=強調色, f=数字の書体, st=斜体, bg=背景の色合い */
+const THEMES = {
+  std: { a: '#e88925', f: '', st: 'normal', bg: '#1a222b' },
+  race: { a: '#ff3b30', f: "'Avenir Next Condensed','Arial Narrow',sans-serif", st: 'italic', bg: '#2a1517' },
+  night: { a: '#3aa8ff', f: "'Futura','Century Gothic',sans-serif", st: 'normal', bg: '#121f33' },
+  mil: { a: '#8fd14f', f: "'Menlo','Courier New',monospace", st: 'normal', bg: '#18221a' },
+  classic: { a: '#e3b85c', f: "'Didot','Bodoni 72',Georgia,serif", st: 'normal', bg: '#241f16' },
+  mono: { a: '#e8edf2', f: "'Avenir Next','Helvetica Neue',sans-serif", st: 'normal', bg: '#1c1f23' }
+};
+const TH = () => THEMES[S.theme] || THEMES.std, AC = () => TH().a;
+function applyTheme() {
+  const t = TH(), r = document.documentElement.style;
+  r.setProperty('--orange', t.a); r.setProperty('--numfont', t.f || 'inherit'); r.setProperty('--numstyle', t.st);
+  document.querySelector('.app').style.background = `radial-gradient(ellipse at 50% 18%,${t.bg} 0,#0b0f14 58%,#080a0d 100%)`;
+  if (typeof makeGMeter === 'function' && $('pitchSvg').innerHTML) { remake(); makeGMeter(); }
+  if (typeof syncNameInputs === 'function') { syncNameInputs(); showName(); }
+}
 const SIDE_S = 0.0355, FRONT_S = 0.056;
 const CX = 120, CY = 112;
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -608,7 +633,7 @@ function makeGauge(type, svg = $(type + 'Svg'), id = type) {
   let ticks = '';
   for (let a = -45; a <= 45; a += 5) {
     const major = a % 15 === 0, r = (a - 90) * D2R, ri = 84, ro = major ? 98 : 91;
-    ticks += `<line x1="${CX + Math.cos(r) * ri}" y1="${CY + Math.sin(r) * ri}" x2="${CX + Math.cos(r) * ro}" y2="${CY + Math.sin(r) * ro}" stroke="${major ? '#e88925' : '#59636d'}" stroke-width="${major ? 2 : 1}"/>`;
+    ticks += `<line x1="${CX + Math.cos(r) * ri}" y1="${CY + Math.sin(r) * ri}" x2="${CX + Math.cos(r) * ro}" y2="${CY + Math.sin(r) * ro}" stroke="${major ? AC() : '#59636d'}" stroke-width="${major ? 2 : 1}"/>`;
     if (major) {
       let t = a === 0 ? '0°' : type === 'pitch' ? (a > 0 ? '+' : '') + a + '°' : (a < 0 ? 'R' : 'L') + Math.abs(a);
       ticks += `<text x="${CX + Math.cos(r) * 72}" y="${CY + Math.sin(r) * 72 + 3.5}" fill="#7f8b97" font-size="9.5" text-anchor="middle">${t}</text>`;
@@ -621,11 +646,11 @@ function makeGauge(type, svg = $(type + 'Svg'), id = type) {
   svg.innerHTML = `<defs><radialGradient id="${id}bg"><stop stop-color="#1c2631"/><stop offset="1" stop-color="#0b0f14"/></radialGradient><clipPath id="${id}clip"><circle cx="${CX}" cy="${CY}" r="104"/></clipPath></defs>
   <circle cx="${CX}" cy="${CY}" r="105" fill="url(#${id}bg)" stroke="#35414d" stroke-width="1.5"/>
   <g clip-path="url(#${id}clip)">${grid}
-   <g id="${id}Rot"><line x1="-110" y1="${groundY - CY}" x2="110" y2="${groundY - CY}" transform="translate(${CX},${CY})" stroke="#e88925" stroke-width="1.2" opacity=".6"/><g transform="translate(${CX},${CY})">${car}</g></g>
+   <g id="${id}Rot"><line x1="-110" y1="${groundY - CY}" x2="110" y2="${groundY - CY}" transform="translate(${CX},${CY})" stroke="${AC()}" stroke-width="1.2" opacity=".6"/><g transform="translate(${CX},${CY})">${car}</g></g>
   </g>
-  <path d="M${CX - 92} ${CY} A92 92 0 0 1 ${CX + 92} ${CY}" fill="none" stroke="#e88925" stroke-width="1.2" opacity=".5"/>${ticks}
-  <g id="${id}Needle"><path d="M${CX} 12 L${CX - 5.5} 2 H${CX + 5.5}Z" fill="#e88925" stroke="#fff" stroke-width=".8"/></g>
-  <circle cx="${CX}" cy="${CY}" r="3.5" fill="#e88925" stroke="#fff" stroke-width="1"/>`;
+  <path d="M${CX - 92} ${CY} A92 92 0 0 1 ${CX + 92} ${CY}" fill="none" stroke="${AC()}" stroke-width="1.2" opacity=".5"/>${ticks}
+  <g id="${id}Needle"><path d="M${CX} 12 L${CX - 5.5} 2 H${CX + 5.5}Z" fill="${AC()}" stroke="#fff" stroke-width=".8"/></g>
+  <circle cx="${CX}" cy="${CY}" r="3.5" fill="${AC()}" stroke="#fff" stroke-width="1"/>`;
 }
 function remake() { makeGauge('pitch'); makeGauge('roll'); lastKey = ''; }
 
@@ -659,15 +684,15 @@ function makeGMeter() {
     rings += `<circle cx="${GC}" cy="${GC}" r="${GR * g / GMAX}" fill="none" stroke="${major ? '#3d4855' : '#26303b'}" stroke-width="${major ? 1.2 : .8}"${major ? '' : ' stroke-dasharray="2 3"'}/>`;
     if (major) rings += `<text x="${GC + 3}" y="${GC - GR * g / GMAX + 9}" fill="#6d7a88" font-size="8">${g.toFixed(1)}G</text>`;
   }
-  const lbl = (x, y, t, t2) => `<text x="${x}" y="${y}" fill="#e88925" font-size="10" font-weight="700" text-anchor="middle">${t}${t2 ? `<tspan x="${x}" dy="10" font-size="8">${t2}</tspan>` : ''}</text>`;
+  const lbl = (x, y, t, t2) => `<text x="${x}" y="${y}" fill="${AC()}" font-size="10" font-weight="700" text-anchor="middle">${t}${t2 ? `<tspan x="${x}" dy="10" font-size="8">${t2}</tspan>` : ''}</text>`;
   $('gSvg').innerHTML = `<defs><radialGradient id="gbg"><stop stop-color="#1c2631"/><stop offset="1" stop-color="#0b0f14"/></radialGradient></defs>
   <circle cx="${GC}" cy="${GC}" r="${GR + 10}" fill="url(#gbg)" stroke="#35414d" stroke-width="1.5"/>
   <line x1="${GC - GR}" y1="${GC}" x2="${GC + GR}" y2="${GC}" stroke="#26303b" stroke-width=".8"/>
   <line x1="${GC}" y1="${GC - GR}" x2="${GC}" y2="${GC + GR}" stroke="#26303b" stroke-width=".8"/>${rings}
   ${lbl(GC, 12, '減速')}${lbl(GC, 196, '加速')}${lbl(10, GC - 2, '右', '旋回')}${lbl(190, GC - 2, '左', '旋回')}
-  <polyline id="gTrailLine" points="" fill="none" stroke="#e88925" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
-  <line id="gVec" x1="${GC}" y1="${GC}" x2="${GC}" y2="${GC}" stroke="#e88925" stroke-width="1.5" opacity=".6"/>
-  <circle id="gBall" cx="${GC}" cy="${GC}" r="7" fill="#e88925" stroke="#fff" stroke-width="1.5"/>`;
+  <polyline id="gTrailLine" points="" fill="none" stroke="${AC()}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
+  <line id="gVec" x1="${GC}" y1="${GC}" x2="${GC}" y2="${GC}" stroke="${AC()}" stroke-width="1.5" opacity=".6"/>
+  <circle id="gBall" cx="${GC}" cy="${GC}" r="7" fill="${AC()}" stroke="#fff" stroke-width="1.5"/>`;
 }
 const gPos = (lat, lon) => {   // 体が押される向きに玉が動く: 右へ押される→右 / 前へ押される(ブレーキ)→上
   let x = lat / GMAX * GR, y = -lon / GMAX * GR; const l = Math.hypot(x, y);
@@ -679,7 +704,7 @@ function renderGMeter(now) {
   const lat = active ? gLat : 0, lon = active ? gLong : 0, tot = Math.hypot(lat, lon);
   const [bx, by] = gPos(lat, lon), ball = $('gBall');
   ball.setAttribute('cx', bx.toFixed(1)); ball.setAttribute('cy', by.toFixed(1));
-  ball.setAttribute('fill', tot >= 0.7 ? '#e5483c' : tot >= 0.4 ? '#f0b429' : '#e88925');
+  ball.setAttribute('fill', tot >= 0.7 ? '#e5483c' : tot >= 0.4 ? '#f0b429' : AC());
   $('gVec').setAttribute('x2', bx.toFixed(1)); $('gVec').setAttribute('y2', by.toFixed(1));
   gTrail.push([bx, by, now]);
   while (gTrail.length && now - gTrail[0][2] > 1500) gTrail.shift();
@@ -893,8 +918,21 @@ function updateChip() {
   if (cal && !tempCal) { c.textContent = '校正済'; c.className = 'chip ok'; }
   else { c.textContent = '未校正'; c.className = 'chip warn'; }
 }
+function showName() {
+  const t = (S.name || 'LAND CRUISER').trim() || 'LAND CRUISER', i = t.lastIndexOf(' '), b = $('brandName');
+  b.textContent = i > 0 ? t.slice(0, i + 1) : t;
+  if (i > 0) { const sp = document.createElement('span'); sp.textContent = t.slice(i + 1); sp.style.color = S.nameAccent || ''; b.appendChild(sp); }
+  b.style.color = S.nameColor || '';
+}
+$('theme').value = S.theme || 'std';
+$('theme').onchange = e => { S.theme = e.target.value; delete S.nameColor; delete S.nameAccent; saveS(); applyTheme(); };
+function syncNameInputs() { $('nameColor').value = S.nameColor || '#ffffff'; $('nameAccent').value = S.nameAccent || AC(); }
+syncNameInputs();
+[['nameColor', 'oninput'], ['nameAccent', 'oninput']].forEach(([k, ev]) => $(k)[ev] = e => { S[k] = e.target.value; saveS(); showName(); });
+$('carName').value = S.name || '';
+$('carName').oninput = e => { S.name = e.target.value; saveS(); showName(); };
 function applyModel() {
-  $('seriesLabel').textContent = S.model; $('vehicleLabel').textContent = CARS[S.model].code; remake();
+  showName(); $('vehicleLabel').textContent = CARS[S.model].code; remake();
 }
 function applySettingsToUI() {
   $('units').value = S.unit; $('mount').value = S.mount;
@@ -1004,6 +1042,7 @@ $('resetPhoto').onclick = () => {
 };
 
 /* ---------- 起動 ---------- */
+applyTheme();
 applyIcon(); updatePhotoBtns();
 applySettingsToUI(); applyModel(); makeGMeter(); updateButtons();
 requestAnimationFrame(render);
