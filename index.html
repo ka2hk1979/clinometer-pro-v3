@@ -153,6 +153,12 @@ input[type=color]{width:50px;height:34px;border:1px solid #3a4552;border-radius:
   .demo.on{display:none}
   .gmeter .jp{display:none}
 }
+/* 横画面ボタン: iPhoneが縦向き固定のままでも、画面全体を90°回して横画面にする(スマホは左に倒して使う) */
+html.rot body{position:fixed;top:0;left:100vw;width:100svh;height:100vw;transform-origin:0 0;transform:rotate(90deg)}
+html.rot body .app{height:100%;padding:6px calc(10px + env(safe-area-inset-bottom)) 6px calc(10px + env(safe-area-inset-top))}
+html.rot .sheet{max-height:88vw}
+html.rot .toast{max-width:90svh}
+.iconbtn.on{border-color:var(--orange);color:var(--orange)}
 
 </style>
 </head>
@@ -169,6 +175,7 @@ input[type=color]{width:50px;height:34px;border:1px solid #3a4552;border-radius:
       <button class="btn zero" id="zeroBtn">⟲ ゼロ設定</button>
       <button class="btn start" id="sensorBtn">▶ 計測開始</button>
     </div>
+    <button class="iconbtn" id="rotBtn" aria-label="横画面に切り替え">⟳</button>
     <button class="iconbtn" id="settings" aria-label="設定">⚙</button>
   </header>
   <div class="status">
@@ -235,7 +242,7 @@ input[type=color]{width:50px;height:34px;border:1px solid #3a4552;border-radius:
   <button class="ghost" id="clearCal">校正データを消去</button>
   <div class="actions2"><button id="close">閉じる</button><button class="primary" id="calibrate">いまの姿勢をゼロに設定</button></div>
   <p class="note">停車中に設置し、水平な場所で「ゼロ設定」を押してください。走行中は画面を操作しないでください。</p>
-  <div class="ver">CLINOMETER PRO v3.0</div>
+  <div class="ver">CLINOMETER PRO v3.1</div>
 </div></div>
 <div class="modal" id="adjModal"><div class="sheet adj">
   <h2 id="adjTitle">写真の位置合わせ</h2>
@@ -588,6 +595,7 @@ const S = Object.assign({}, DEF, store.get('lc.settings', {}));
 if (!CARS[S.model]) S.model = '70';
 let cal = store.get('lc.cal', null);          // { u:[x,y,z] } 水平な車体での重力上向きベクトル(端末座標)
 const saveS = () => store.set('lc.settings', S);
+const portraitMQ = matchMedia('(orientation:portrait)');
 
 /* ---------- ベクトル ---------- */
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -601,10 +609,11 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function frameFrom(u0, mount) {
   const u = norm(u0);
   let fd;
-  if (mount === 'flatF') fd = [0, 1, 0];
-  else if (mount === 'flatB') fd = [0, -1, 0];
+  const top = isRot() ? [1, 0, 0] : [0, 1, 0];   // 画面の上端の向き(横画面ボタン中は端末の右側面)
+  if (mount === 'flatF') fd = top;
+  else if (mount === 'flatB') fd = mul(top, -1);
   else if (mount === 'upright') fd = [0, 0, -1];
-  else fd = (Math.abs(u[2]) > Math.abs(u[0]) && Math.abs(u[2]) > Math.abs(u[1])) ? [0, 1, 0] : [0, 0, -1];
+  else fd = (Math.abs(u[2]) > Math.abs(u[0]) && Math.abs(u[2]) > Math.abs(u[1])) ? top : [0, 0, -1];
   const f = norm(sub(fd, mul(u, dot(fd, u))));
   return { u, f, r: cross(f, u) };
 }
@@ -959,6 +968,28 @@ $('clearCal').onclick = () => { cal = null; store.del('lc.cal'); frame = null; r
 $('calibrate').onclick = () => { closeM(); calibrate(); };
 $('zeroBtn').onclick = calibrate;
 $('sensorBtn').onclick = async () => { if (active) stopSensors(); else await startSensors(); };
+
+/* ---------- 横画面ボタン ---------- */
+function isRot() { return !!S.rot && portraitMQ.matches; }
+(function () {   // 横画面用のレイアウト(@media landscape)を html.rot でも使えるように写す
+  const out = [];
+  for (const r of document.styleSheets[0].cssRules) {
+    if (!r.media || !/landscape/.test(r.media.mediaText)) continue;
+    for (const s of r.cssRules) if (s.selectorText) out.push(s.selectorText.split(',').map(x => 'html.rot ' + x.trim()).join(',') + '{' + s.style.cssText + '}');
+  }
+  const st = document.createElement('style'); st.textContent = out.join('\n'); document.head.appendChild(st);
+})();
+function applyRot() {
+  document.documentElement.classList.toggle('rot', isRot());
+  $('rotBtn').classList.toggle('on', !!S.rot); $('rotBtn').setAttribute('aria-label', S.rot ? '縦画面に戻す' : '横画面に切り替え');
+}
+$('rotBtn').onclick = () => {
+  S.rot = !S.rot; saveS(); applyRot(); rebuildFrame();
+  if (!portraitMQ.matches) toast(S.rot ? '縦向きのときに横画面で表示します' : '横画面ボタンを切りました');
+  else toast(S.rot ? 'スマホを左に倒して使ってください' + (S.mount !== 'upright' ? '。平置きのときはゼロ設定をやり直してください' : '') : '縦画面に戻しました', 3200);
+};
+portraitMQ.addEventListener('change', () => { applyRot(); rebuildFrame(); });
+applyRot();
 $('maxGBtn').onclick = () => { maxG = 0; toast('最大Gをリセットしました'); };
 $('maxAngleBtn').onclick = () => { maxAngle = 0; lastKey = ''; toast('最大角をリセットしました'); };
 
