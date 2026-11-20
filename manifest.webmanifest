@@ -1,7 +1,7 @@
 {
-  "name": "Land Cruiser Clinometer Pro",
-  "short_name": "LC傾斜計",
-  "description": "ランドクルーザー用 オフロード傾斜計(ピッチ/ロール/速度/高度/最大G)",
+  "name": "TrailTilt - Offroad Tilt & G Meter",
+  "short_name": "TrailTilt",
+  "description": "オフロード傾斜計とGメーター(ピッチ/ロール/速度/高度/最大G)",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

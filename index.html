@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LC傾斜計">
+<meta name="apple-mobile-web-app-title" content="TrailTilt">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" id="touchIcon" href="apple-touch-icon.png?v=2.5">
 <link rel="icon" href="icon-192.png">
-<title>LAND CRUISER | CLINOMETER PRO</title>
+<title>TrailTilt | Offroad Tilt &amp; G Meter</title>
 <style>
 :root{--bg:#090c10;--panel:#11161d;--line:#303946;--orange:#e88925;--muted:#93a0ae;--white:#f4f6f8;--green:#27b36a;--red:#e5483c;--amber:#f0b429}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -214,7 +214,7 @@ html.rot .toast{max-width:90svh}
 <div class="modal" id="modal"><div class="sheet">
   <h2>設定</h2>
   <h3>表示</h3>
-  <div class="field"><label for="carName">左上に出す名前(最後の言葉がオレンジ色)</label><input id="carName" maxlength="24" placeholder="LAND CRUISER"></div>
+  <div class="field"><label for="carName">左上に出す名前(最後の言葉がオレンジ色)</label><input id="carName" maxlength="24" placeholder="TRAIL TILT"></div>
   <div class="field"><label for="theme">計器のデザイン(色と数字の書体)</label><select id="theme">
     <option value="std">スタンダード(オレンジ)</option><option value="race">レーシング(赤・斜体)</option><option value="night">ナイトブルー(青・丸み)</option><option value="mil">ミリタリー(緑・計器文字)</option><option value="classic">クラシック(金・セリフ)</option><option value="mono">モノクロ(白・細身)</option></select></div>
   <div class="row"><div>名前の文字の色<small>デザインを変えると初期値に戻ります</small></div><input type="color" id="nameColor" value="#ffffff"></div>
@@ -242,7 +242,7 @@ html.rot .toast{max-width:90svh}
   <button class="ghost" id="clearCal">校正データを消去</button>
   <div class="actions2"><button id="close">閉じる</button><button class="primary" id="calibrate">いまの姿勢をゼロに設定</button></div>
   <p class="note">停車中に設置し、水平な場所で「ゼロ設定」を押してください。走行中は画面を操作しないでください。</p>
-  <div class="ver">CLINOMETER PRO v3.1</div>
+  <div class="ver">TrailTilt v3.2</div>
 </div></div>
 <div class="modal" id="adjModal"><div class="sheet adj">
   <h2 id="adjTitle">写真の位置合わせ</h2>
@@ -928,7 +928,7 @@ function updateChip() {
   else { c.textContent = '未校正'; c.className = 'chip warn'; }
 }
 function showName() {
-  const t = (S.name || 'LAND CRUISER').trim() || 'LAND CRUISER', i = t.lastIndexOf(' '), b = $('brandName');
+  const t = (S.name || 'TRAIL TILT').trim() || 'TRAIL TILT', i = t.lastIndexOf(' '), b = $('brandName');
   b.textContent = i > 0 ? t.slice(0, i + 1) : t;
   if (i > 0) { const sp = document.createElement('span'); sp.textContent = t.slice(i + 1); sp.style.color = S.nameAccent || ''; b.appendChild(sp); }
   b.style.color = S.nameColor || '';
